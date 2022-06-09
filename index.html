@@ -1,0 +1,83 @@
+<head>
+    <title>Fuusion AutoBuy</title>
+    <link rel="stylesheet" href="styles.css"></link>
+    <link rel="icon" type="image/x-icon" href="orange.png">
+</head>
+
+<body>
+
+  <img id="mainLogo" src="assets/logo.png"> 
+
+    <div id="usersWallet">Not Connected</div>
+
+    <div id="topLeft">
+
+        <div class="statsBlock" id="menu_locked">
+            <div class="menuSquare purple">
+                <img src="assets/balance.png" class="menuImage">
+            </div>
+            <h4 class="statsLabel">Total BNB Bought</h4>
+            <h2 class="stat" id="stat_balance">0.00</h2>
+        </div>
+
+        <div class="statsBlock" id="menu_fdv">
+            <div class="menuSquare blue">
+                <img src="assets/circle.png" class="menuImage">
+            </div>
+            <h4 class="statsLabel">Total Buys</h4>
+            <h2 class="stat" id="stat_balance">0</h2>
+        </div>
+
+        <div class="statsBlock" id="menu_usd">
+            <div class="menuSquare purple">
+                <img src="assets/clock.png" class="menuImage">
+            </div>
+            <h4 class="statsLabel">Pending Buys</h4>
+            <h2 class="stat" id="stat_balance">0.00</h2>
+        </div>
+ 
+    </div>
+
+
+    <div id="topRight">
+
+        <div class="statsBlock" id="block_balance">
+            <div class="statsSquare purple">
+                <img src="assets/balance.png" class="statsImage">
+            </div>
+            <h4 class="statsLabel">Your BNB</h4>
+            <h2 class="stat" id="stat_balance">0.00</h2>
+           <!-- <h2 class="dollarStat" id="stat_balance">Price N/A</h2> -->
+
+        </div>
+
+        <div class="statsBlock" id="block_unlock">
+            <div class="statsSquare blue">
+                <img src="assets/clock.png" class="statsImage">
+            </div>
+            <h4 class="statsLabel">Your pending</h4>
+            <h2 class="stat" id="stat_balance">0.00 BNB</h2>
+              <!-- <h2 class="dollarStat" id="stat_balance">OK</h2> -->
+        </div>
+
+        <button id="emergencyWithdraw">Withdraw</button>
+
+    </div>
+
+    <div id="bottomRight">
+        <div>
+            <div class="bottomRightSquare blue"></div>
+            <h2 id="sendBNB">Send BNB</h2>
+            <h4 id="sendBNBDesc">And get tokens automatically at support levels</h2>
+            <input id="buyInput" class="inputButton"></input>
+            <div class="bottomRightBorder"></div>
+            <button id="buyButton" class="lockButton purple">BUY</button>
+            <h4 id="errorMessage"></h4>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+    <script src="dapp.js"></script>
+</body>
