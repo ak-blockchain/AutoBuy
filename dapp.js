@@ -6,8 +6,7 @@ Moralis.start({ serverUrl, appId });
 var userAddress; 
 var ethers; 
 var provider; 
-const DECIMALS = 9;
-const contractAddress = "0x4438Cdb7bF5F37d7423b2974981EFAD2d0C0e7C7";
+const contractAddress = "0xd0C75adAEd6631212965c131B61243B74F4E85A1";
 var mainContract; 
 var stakingContract; 
 
@@ -83,7 +82,7 @@ async function login() {
       user = await Moralis.Web3.authenticate({signingMessage: "Requesting permission to read account balances"});
     }
     updateUserAddress(user.attributes.ethAddress);
-   // getStats();
+   	getStats();
   }
 
 async function logOut() {
@@ -92,265 +91,72 @@ async function logOut() {
 }
  
 async function getStats() {
-    var contract = await new ethers.Contract(contractAddress, abi, provider);
-    let tokenBalance = await contract.balanceOf(userAddress);
-    
-    let isReferred = (tokenBalance != "0")
-    if(isReferred) {
-        let referrer = await contract.referrer(userAddress);
-        updateReferrer(referrer);
-    }
+	var options = {chain: "0x38", address: userAddress};
+	let balance = await Moralis.Web3API.account.getNativeBalance(options);
+	document.getElementById("balance").innerHTML = (parseFloat(balance.balance)/(10**18)).toFixed(2); 
 
- 
-    console.log("Contract address "+contract.address);    
-    await getRewards();
-    constructReferredTable();
-//	getReferralLeaderboard();
+	var options = {chain: "0x38", address: contractAddress};
+	let contractBalance = await Moralis.Web3API.account.getNativeBalance(options);
+	document.getElementById("pending").innerHTML = (parseFloat(contractBalance.balance)/(10**18)).toFixed(2); 
+
+
+    var contract = await new ethers.Contract(contractAddress, abi, provider);
+    
+	let totalBNBBought = await contract.totalBNBBought();
+	document.getElementById("totalBNBBought").innerHTML = parseFloat(totalBNBBought)/(10**18).toFixed(2);
+    
+	let totalBuysRequested = await contract.totalBuysRequested();
+	document.getElementById("totalBuysRequested").innerHTML = totalBuysRequested;
+
+	if(Moralis.User.current()) {
+		let bnbContributed = await contract.bnbContributed(userAddress);
+		document.getElementById("bnbContributed").innerHTML = parseFloat(bnbContributed)/(10**18).toFixed(2);
+	}
+
+    
 
 }
 
 
 async function withdraw() {
-
+	const signer = provider.getSigner();
+	var contract = await new ethers.Contract(contractAddress, abi, signer);
+	await contract.emergencyWithdraw();
 }
 
 linkSimpleButtons();
-
+//getStats();
 
 const abi = [
 	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "Approval",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountBNB",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountBOG",
-				"type": "uint256"
-			}
-		],
-		"name": "AutoLiquify",
-		"type": "event"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": false,
 				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "feesTo",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "feesFrom",
+				"name": "sender",
 				"type": "address"
 			},
 			{
 				"indexed": false,
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "ReferralBonus",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "referred",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "referrer",
-				"type": "address"
-			}
-		],
-		"name": "Referred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "Transfer",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "_maxWalletSize",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "_minTransferForReferral",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "holder",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			}
-		],
-		"name": "allowance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
 			}
 		],
-		"name": "approve",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
+		"name": "BNBContributed",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "buy",
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			}
-		],
-		"name": "approveMax",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "adr",
-				"type": "address"
-			}
-		],
-		"name": "authorize",
+		"inputs": [],
+		"name": "emergencyWithdraw",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -359,170 +165,46 @@ const abi = [
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "account",
+				"name": "_token",
 				"type": "address"
 			}
 		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
+		"stateMutability": "nonpayable",
+		"type": "constructor"
 	},
 	{
 		"inputs": [],
-		"name": "decimals",
-		"outputs": [
-			{
-				"internalType": "uint8",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getCirculatingSupply",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "accuracy",
-				"type": "uint256"
-			}
-		],
-		"name": "getLiquidityBacking",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getOwner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "adr",
-				"type": "address"
-			}
-		],
-		"name": "isAuthorized",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "target",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "accuracy",
-				"type": "uint256"
-			}
-		],
-		"name": "isOverLiquified",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "isOwner",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "isReferred",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "manualSend",
+		"name": "withdrawAll",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "minSupplyForReferralReward",
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
+			}
+		],
+		"name": "withdrawToken",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "bnbContributed",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -535,42 +217,23 @@ const abi = [
 	},
 	{
 		"inputs": [],
-		"name": "name",
+		"name": "currentlyBuying",
 		"outputs": [
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pair",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "referrer",
+		"inputs": [],
+		"name": "owner",
 		"outputs": [
 			{
-				"internalType": "address",
+				"internalType": "address payable",
 				"name": "",
 				"type": "address"
 			}
@@ -592,147 +255,13 @@ const abi = [
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_marketingFeeReceiver",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_devFeeReceiver",
-				"type": "address"
-			}
-		],
-		"name": "setFeeReceiver",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_liquidityFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_devFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_marketingFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_feeDenominator",
-				"type": "uint256"
-			}
-		],
-		"name": "setFees",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "holder",
-				"type": "address"
-			},
-			{
-				"internalType": "bool",
-				"name": "exempt",
-				"type": "bool"
-			}
-		],
-		"name": "setIsFeeExempt",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "setMaxWallet",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "setMinTransferForReferral",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "setMinimumBalanceForReferral",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "newFee",
-				"type": "uint256"
-			}
-		],
-		"name": "setReferralFee",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bool",
-				"name": "_enabled",
-				"type": "bool"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "setSwapBackSettings",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
-		"name": "swapEnabled",
+		"name": "token",
 		"outputs": [
 			{
-				"internalType": "bool",
+				"internalType": "address",
 				"name": "",
-				"type": "bool"
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -740,7 +269,7 @@ const abi = [
 	},
 	{
 		"inputs": [],
-		"name": "swapThreshold",
+		"name": "totalBNBBought",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -753,20 +282,7 @@ const abi = [
 	},
 	{
 		"inputs": [],
-		"name": "symbol",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalSupply",
+		"name": "totalBuysRequested",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -780,97 +296,25 @@ const abi = [
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
 				"internalType": "uint256",
-				"name": "amount",
+				"name": "",
 				"type": "uint256"
 			}
 		],
-		"name": "transfer",
+		"name": "users",
 		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_token",
-				"type": "address"
-			}
-		],
-		"name": "transferForeignToken",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
 			{
 				"internalType": "address payable",
-				"name": "adr",
+				"name": "addr",
 				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
+			},
 			{
-				"internalType": "address",
-				"name": "adr",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
 			}
 		],
-		"name": "unauthorize",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
 	}
 ]
